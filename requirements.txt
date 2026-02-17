@@ -1,0 +1,21 @@
+# Core Spark + Delta
+# Install on Airflow image build
+# pyspark==4.0.1 
+# delta-spark==4.0.1
+
+# AWS / S3 / MinIO
+boto3
+pyarrow
+
+# Data Analysis
+pandas>=2.1.0
+numpy>=1.26.0
+
+# Selenium (web scraping / browser automation)
+selenium>=4.28.1 # using certifi==2025.1.31
+webdriver-manager>=4.0.2
+
+# Dev / Testing / Formatting
+pytest
+black
+ruff

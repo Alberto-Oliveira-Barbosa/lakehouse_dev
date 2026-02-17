@@ -1,0 +1,60 @@
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: lakehouse-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lakehouse
+
+  minio:
+    image: minio/minio:latest
+    container_name: lakehouse-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    env_file:
+      - .env
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - lakehouse
+
+  airflow:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: lakehouse-airflow
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - minio
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: /opt/airflow
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./pipelines:/opt/airflow/pipelines
+      - ./crawlers:/opt/airflow/crawlers
+      - ./core:/opt/airflow/core
+      - ./data_contracts:/opt/airflow/data_contracts
+    ports:
+      - "8081:8080"
+    command: standalone
+    networks:
+      - lakehouse
+
+networks:
+  lakehouse:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:

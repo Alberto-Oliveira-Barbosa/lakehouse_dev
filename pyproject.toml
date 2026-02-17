@@ -1,0 +1,8 @@
+[project]
+name = "Lakehouse_dev"
+version = "0.1.0"
+description = "Lakehouse engineering template"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
