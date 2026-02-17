@@ -1,19 +1,13 @@
 def ingest_test():
-    import os
-    import inspect
-    import logging
     from core.spark.spark_session import get_spark
+    from core.utils import get_full_path, save_delta
 
     # Definindo variáveis da função 
-    protocol = "s3a://"
-    bucket = "lakehouse"
     layer = "bronze"
     table_name = "example"
-    full_path = os.path.join(protocol,bucket,layer,table_name)
-    function_name = inspect.currentframe().f_code.co_name
-    logging.info(f"Nome capturado na função: {function_name}")
+    full_path = get_full_path(table_name, layer)
 
-    spark = get_spark("teste")
+    spark = get_spark("ingest_test")
     
     # Cria um dataframe de exemplo
     df = spark.createDataFrame([
@@ -23,11 +17,5 @@ def ingest_test():
         {"deptId": 3, "age": 20, "name": "Haejoon Lee", "gender": "M", "salary": 200}
     ])
 
-
-    df.show()
-
     # Salva como delta table no bucket do Minio
-    df.write.format("delta").mode("overwrite").save(full_path)
-
-
-    
+    save_delta(df, full_path)
