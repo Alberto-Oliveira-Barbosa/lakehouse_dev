@@ -1,6 +1,6 @@
 def ingest_test():
-    from core.spark.spark_session import get_spark
-    from core.utils import get_full_path, save_delta
+    from core.spark.spark_utils import get_spark, save_delta
+    from core.utils import get_full_path
 
     layer = "bronze"
     table_name = "example"
