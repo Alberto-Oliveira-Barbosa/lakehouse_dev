@@ -255,6 +255,7 @@ def get_spark(app_name="lakehouse", verbose=False):
     # ======================================================================
     # CONFIGURAÇÕES FINAIS
     # ======================================================================
+    spark.sparkContext.setLogLevel("WARN")  # apenas WARN e ERROR
     
     # Log único indicando que a SparkSession foi iniciada
     if verbose and problemas_encontrados:
@@ -262,28 +263,4 @@ def get_spark(app_name="lakehouse", verbose=False):
     elif verbose:
         print(f"SparkSession '{app_name}' inicializada.")
 
-    
-    # =========================
-    # LOGS LIMPOS
-    # =========================
-    # Limita logs do Spark e de bibliotecas Java/Scala no stderr
-    spark.sparkContext.setLogLevel("ERROR")  # apenas WARN e ERROR
-
-    # Configuração direta do log4j para reduzir mensagens confusas
-    try:
-        log4j = spark._jvm.org.apache.log4j
-        root_logger = log4j.LogManager.getRootLogger()
-        root_logger.setLevel(log4j.Level.WARN)  # WARN+ERROR
-    except Exception as e:
-        if verbose:
-            print(f"Atenção: não foi possível configurar log4j: {e}")
-
-    # Reduz logs da ponte py4j (Python → JVM)
-    logging.getLogger("py4j").setLevel(logging.ERROR)
-
-    if verbose:
-        print(f"SparkSession '{app_name}' inicializada com logs limpos.")
-
-
-    
     return spark
