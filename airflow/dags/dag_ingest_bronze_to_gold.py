@@ -2,6 +2,8 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 from pipelines.bronze.ingest_on_bronze import ingest_test
+from pipelines.silver.transform import transform_test
+from pipelines.gold.aggregates import generate_gold_metrics
 
 default_args = {
     "owner": "airflow",
@@ -11,7 +13,7 @@ default_args = {
 }
 
 with DAG(
-    "ingest_on_bronze_layer",
+    "Pipeline_Bronze_to_Gold",
     default_args=default_args,
     schedule=None,
     catchup=False,
@@ -23,4 +25,14 @@ with DAG(
         python_callable=ingest_test
     )
 
-    ingest_test
+    transform_test = PythonOperator(
+        task_id="transform_test",
+        python_callable=transform_test
+    )
+
+    aggregate_test = PythonOperator(
+        task_id="generate_gold_metrics",
+        python_callable=generate_gold_metrics
+    )
+
+    ingest_test >> transform_test >> aggregate_test 
