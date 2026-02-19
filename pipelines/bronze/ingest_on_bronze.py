@@ -1,12 +1,12 @@
 def ingest_test():
-    from core.spark.spark_utils import get_spark, save_delta
+    from core.spark.spark_utils import get_spark_session, save_delta
     from core.utils import get_full_path
 
     layer = "bronze"
     table_name = "example"
     full_path = get_full_path(table_name, layer)
 
-    spark = get_spark("ingest_test")
+    spark = get_spark_session("ingest_test",verbose=False, suppress_init_logs=True)
     
     df = spark.createDataFrame([
         {"deptId": 1, "age": 40, "name": "Hyukjin Kwon", "gender": "M", "salary": 50},

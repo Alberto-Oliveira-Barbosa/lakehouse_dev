@@ -1,8 +1,14 @@
+import sys
+import os
 import logging
+from subprocess import Popen
 from typing import Any
-from pyspark.sql import DataFrame
+from unittest.mock import patch
+from pyspark.sql import SparkSession, DataFrame
+from delta import configure_spark_with_delta_pip
 
-def get_spark(app_name="lakehouse", verbose=False):
+
+def _get_spark(app_name="lakehouse", verbose=False):
     """
     Creates and configures a SparkSession to work with Delta Lake + MinIO (S3A).
 
@@ -231,6 +237,58 @@ def get_spark(app_name="lakehouse", verbose=False):
 
     return spark
 
+def get_spark_session(app_name="lakehouse", verbose=False, suppress_init_logs=True):
+    """
+    Suppresses verbose initialization logs (Ivy, JVM incubator, etc.)
+    without changing any configuration or behavior of the original SparkSession.
+
+    Uses a temporary patch only during session creation
+    (much safer than globally redirecting stdout/stderr).
+
+    Parameters
+    ----------
+    app_name : str
+        Spark application name.
+    verbose : bool
+        Verbose flag passed to the original _get_spark function.
+    suppress_init_logs : bool
+        If True, suppresses stdout/stderr during SparkSession initialization.
+        If False, creates the session normally without log suppression.
+    """
+    import os
+    import logging
+    from subprocess import Popen
+    from unittest.mock import patch
+
+    def create_spark():
+        # Calls the original function without any modification
+        return _get_spark(app_name=app_name, verbose=verbose)
+
+    if suppress_init_logs:
+        # Suppress stdout/stderr ONLY during SparkSession initialization
+        # (this is when Ivy runs and the JVM prints incubator module warnings)
+        with patch(
+            "pyspark.java_gateway.Popen",
+            side_effect=lambda *args, **kwargs: Popen(
+                *args,
+                **kwargs,
+                stdout=open(os.devnull, 'wb'),
+                stderr=open(os.devnull, 'wb')
+            ),
+        ):
+            spark = create_spark()
+    else:
+        spark = create_spark()
+
+    spark.sparkContext.setLogLevel("ERROR")
+
+    logging.getLogger(__name__).info(
+        f"SparkSession '{app_name}' created "
+        f"(init log suppression={'ON' if suppress_init_logs else 'OFF'})"
+    )
+
+    return spark
+    
 
 def save_delta(
     df: DataFrame,

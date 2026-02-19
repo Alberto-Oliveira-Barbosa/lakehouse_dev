@@ -1,9 +1,9 @@
 def generate_gold_metrics():
     from pyspark.sql import functions as F
-    from core.spark.spark_utils import get_spark, save_delta
+    from core.spark.spark_utils import get_spark_session, save_delta
     from core.utils import get_full_path
 
-    spark = get_spark("aggregation_test")
+    spark = get_spark_session("aggregation_test",verbose=False, suppress_init_logs=True)
     df = spark.read.format("delta").load(get_full_path("example", "silver"))
 
     # employees by department

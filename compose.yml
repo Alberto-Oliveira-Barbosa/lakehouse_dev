@@ -41,6 +41,7 @@ services:
       PYTHONPATH: /opt/airflow
     volumes:
       - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/config:/opt/airflow/config
       - ./pipelines:/opt/airflow/pipelines
       - ./crawlers:/opt/airflow/crawlers
       - ./core:/opt/airflow/core
