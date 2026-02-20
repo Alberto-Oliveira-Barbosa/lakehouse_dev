@@ -5,34 +5,44 @@
 [![Delta Lake](https://img.shields.io/badge/delta-lake-007ec6)](https://delta.io/)
 [![Airflow](https://img.shields.io/badge/airflow-3.0-red)](https://airflow.apache.org/)
 
-Projeto de referência para arquitetura **Data Lakehouse**, com pipelines de ingestão, transformação e orquestração, utilizando **Docker** para facilitar o desenvolvimento e testes locais.
+Projeto de referência para implementação de uma arquitetura **Data Lakehouse**, contemplando pipelines de ingestão, transformação e orquestração de dados.
 
-O projeto adota camadas de dados típicas do Lakehouse: **bronze → silver → gold**, separando ingestão, limpeza e modelagem.
+O ambiente é totalmente containerizado com **Docker**, garantindo reprodutibilidade, padronização e facilidade de execução local.
 
----
+A modelagem segue o padrão clássico de camadas do Lakehouse:
 
-## Tecnologias utilizadas
+**Bronze → Silver → Gold**
 
-* **Python 3.12** – linguagem principal para pipelines e scripts
-* **PySpark 4** – processamento distribuído de dados
-* **Delta Tables 4** – armazenamento transacional, versionado e otimizado para queries
-* **MinIO** – armazenamento compatível com S3, usado como data lake local
-* **Airflow 3** – orquestração e scheduling de pipelines
-* **Selenium** – coleta automatizada de dados da web
+* **Bronze**: dados brutos (raw ingestion)
+* **Silver**: dados tratados, limpos e enriquecidos
+* **Gold**: dados modelados e prontos para consumo analítico
 
 ---
 
-Segue a versão revisada, com linguagem mais clara, técnica e profissional:
+## Tecnologias Utilizadas
+
+* **Python 3.12** – Linguagem principal para desenvolvimento de pipelines e scripts
+* **PySpark 4** – Processamento distribuído de dados
+* **Delta Lake** – Armazenamento transacional com versionamento e otimizações para consultas
+* **MinIO** – Armazenamento compatível com S3 utilizado como Data Lake local
+* **Airflow 3** – Orquestração e agendamento de pipelines
+* **Selenium** – Coleta automatizada de dados externos
 
 ---
 
-## Estrutura de Pastas e Arquitetura do Projeto
+# Estrutura de Pastas e Arquitetura do Projeto
 
-A organização do projeto foi definida com foco em **separação de responsabilidades**, **manutenibilidade**, **escalabilidade** e **clareza arquitetural**.
+A organização do projeto foi definida com foco em:
 
-Cada diretório possui um papel bem definido dentro da arquitetura Lakehouse adotada.
+* Separação clara de responsabilidades
+* Modularidade
+* Facilidade de manutenção
+* Escalabilidade futura
+* Clareza arquitetural
 
-### Estrutura de Diretórios
+Cada diretório possui uma função específica dentro da arquitetura Lakehouse adotada.
+
+## Estrutura de Diretórios
 
 ```txt
 lakehouse_dev/
@@ -48,9 +58,9 @@ lakehouse_dev/
 │   └── spark/
 │       └── spark_session.py   # Configuração centralizada da SparkSession
 │
-├── data_contracts/            # Definição de contratos e validações de dados
+├── data_contracts/            # Contratos e validações de dados
 │
-├── airflow/                   # Configurações e estrutura do Airflow
+├── airflow/                   # Estrutura e configuração do Airflow
 │   ├── dags/                  # Definição das DAGs
 │   ├── configs/               # Configurações específicas
 │   └── plugins/               # Plugins customizados
@@ -61,7 +71,7 @@ lakehouse_dev/
 │   ├── gold/
 │   └── config/                # Configurações específicas de pipelines
 │
-├── crawlers/                  # Automações e coleta de dados externos
+├── crawlers/                  # Coleta automatizada de dados externos
 │   └── selenium/              # Implementações com Selenium
 │
 ├── docker/
@@ -74,101 +84,103 @@ lakehouse_dev/
 
 ---
 
-## Organização Arquitetural
+# Organização Arquitetural
 
-A arquitetura segue o padrão **Data Lakehouse**, com separação clara entre:
+A arquitetura segue o modelo **Data Lakehouse**, estruturado em quatro pilares principais:
 
-* **Orquestração** (Airflow)
-* **Processamento** (Spark + Delta Lake)
-* **Armazenamento** (MinIO)
-* **Ingestão externa** (Crawlers)
-* **Governança e qualidade** (Data Contracts)
+* **Orquestração** → Airflow
+* **Processamento** → Spark + Delta Lake
+* **Armazenamento** → MinIO (S3-compatible)
+* **Ingestão externa** → Crawlers
 
-Essa estrutura permite evolução modular, testes isolados e adaptação futura para ambientes em cloud.
+Além disso, a camada de **Data Contracts** reforça a governança e a qualidade dos dados.
+
+Essa abordagem permite evolução modular do projeto e facilita futura migração para ambientes em cloud (AWS, Azure, GCP).
 
 ---
 
-## Descrição dos Principais Componentes
+# Descrição dos Componentes
 
 ### `requirements.txt`
 
-Gerencia dependências Python adicionais ao ambiente base da imagem Docker.
-Sempre que novas bibliotecas forem adicionadas, é necessário **reconstruir a imagem Docker** para refletir as mudanças no ambiente.
+Gerencia dependências adicionais ao ambiente base da imagem Docker.
+
+Sempre que novas bibliotecas forem adicionadas, é necessário reconstruir a imagem:
+
+```bash
+docker compose build
+```
 
 ---
 
 ### `Makefile`
 
-Centraliza comandos recorrentes do projeto (build, start, stop, logs, etc.).
-Reduz complexidade operacional e padroniza a execução do ambiente.
+Centraliza os principais comandos operacionais do projeto (build, start, stop, logs etc.), reduzindo complexidade e padronizando a execução.
 
 ---
 
 ### `.env`
 
-Responsável pela definição de:
+Arquivo responsável pela definição de:
 
 * Credenciais
 * Variáveis de ambiente
 * Configurações sensíveis
 
-Esse arquivo **não deve ser versionado** em ambientes produtivos.
+⚠️ Não deve ser versionado em ambientes produtivos.
 
 ---
 
 ### `core/`
 
-Contém módulos reutilizáveis e utilitários compartilhados entre pipelines e DAGs.
-A centralização evita duplicação de código e melhora a padronização técnica.
+Contém módulos reutilizáveis e utilitários compartilhados entre DAGs e pipelines.
+Evita duplicação de código e promove padronização técnica.
 
 ---
 
 ### `data_contracts/`
 
-Destinado à definição de contratos de dados, schemas esperados e validações.
-Tem como objetivo garantir:
+Responsável por garantir qualidade e consistência dos dados por meio de:
 
-* Qualidade
-* Consistência
-* Governança dos dados
+* Definição de schemas
+* Regras de validação
+* Contratos de dados
 
 ---
 
 ### `airflow/`
 
-Contém todos os artefatos relacionados à orquestração:
+Agrupa todos os artefatos relacionados à orquestração:
 
-* `dags/` → definição dos fluxos de execução
-* `configs/` → configurações específicas
+* `dags/` → definição dos fluxos
+* `configs/` → configurações auxiliares
 * `plugins/` → extensões customizadas
 
-Essa estrutura mantém o Airflow desacoplado da lógica de negócio.
+Mantém a orquestração desacoplada da lógica de negócio.
 
 ---
 
 ### `pipelines/`
 
-Contém a lógica de ingestão e transformação organizada nas camadas:
+Contém a lógica de ingestão e transformação organizada por camadas:
 
-* **bronze/** → ingestão bruta (raw data)
-* **silver/** → dados tratados e enriquecidos
-* **gold/** → dados prontos para consumo analítico
+* `bronze/` → ingestão bruta
+* `silver/` → dados tratados e padronizados
+* `gold/` → dados prontos para consumo analítico
 
-O diretório é montado dentro do container do Airflow, garantindo que qualquer novo desenvolvimento seja automaticamente reconhecido pelas DAGs.
+O diretório é montado no container do Airflow, permitindo que novos desenvolvimentos sejam automaticamente reconhecidos pelas DAGs.
 
 ---
 
 ### `crawlers/`
 
-Destinado exclusivamente à coleta de dados externos.
+Responsável exclusivamente pela coleta de dados externos.
 
 A separação entre `pipelines` e `crawlers` foi uma decisão arquitetural para:
 
 * Isolar responsabilidades
 * Facilitar manutenção
-* Permitir futura substituição da estratégia de ingestão
-
-Esse diretório também é montado dentro do container do Airflow.
+* Permitir evolução independente da camada de ingestão
 
 ---
 
@@ -180,36 +192,19 @@ Contém os artefatos necessários para construção da imagem personalizada do p
 * Spark 4
 * Delta Lake
 
-Essa abordagem garante reprodutibilidade e padronização do ambiente.
-
----
-
-### `scripts/`
-
-Armazena scripts auxiliares que não fazem parte diretamente dos pipelines, mas apoiam o desenvolvimento ou operação.
+Garante reprodutibilidade e padronização do ambiente.
 
 ---
 
 ### `tests/`
 
-Diretório dedicado a testes unitários e de integração.
-Permite validação contínua da lógica de transformação e regras de negócio.
+Diretório dedicado a testes unitários e de integração, promovendo confiabilidade e evolução segura do código.
 
 ---
 
-## Benefícios da Estrutura Adotada
+# Pré-requisitos
 
-* Separação clara de responsabilidades
-* Modularização da lógica de negócio
-* Facilidade de testes e manutenção
-* Ambiente reprodutível via Docker
-* Preparado para migração futura para ambientes em cloud
-
----
-
-## Pré-requisitos
-
-Antes de executar o projeto, você precisa ter instalado:
+Antes de iniciar, certifique-se de possuir:
 
 * Docker
 * Docker Compose
@@ -217,16 +212,16 @@ Antes de executar o projeto, você precisa ter instalado:
 
 ---
 
-## Instalação e Configuração
+# Instalação
 
-### 1 - Clone o repositório
+## 1. Clone o repositório
 
 ```bash
 git clone git@github.com:Alberto-Oliveira-Barbosa/lakehouse_dev.git
 cd lakehouse_dev
 ```
 
-### 2 - Configure o ambiente
+## 2. Configure o ambiente
 
 ```bash
 cp .env.example .env
@@ -236,9 +231,9 @@ Edite o `.env` conforme necessário.
 
 ---
 
-## Executando com Docker
+# Execução com Docker
 
-### Subir todos os serviços
+## Subir todos os serviços
 
 ```bash
 make up
@@ -250,45 +245,29 @@ ou
 docker compose up --build -d
 ```
 
-### Parar serviços
+## Parar os serviços
 
 ```bash
 make down
 ```
 
-### 📜 Logs
-
-Logs gerais:
+## Visualizar logs
 
 ```bash
 make logs
-```
-
-Logs do Airflow:
-
-```bash
 make logs_airflow
-```
-
-Logs do MinIO:
-
-```bash
 make logs_minio
 ```
 
 ---
 
-## Configurações Obrigatórias Antes de Rodar as DAGs
+# Configurações Obrigatórias Antes de Executar as DAGs
 
----
+## Senha automática no Apache Airflow 3
 
-### Senha automática no Apache Airflow 3
+A partir da versão 3, o Airflow gera automaticamente a senha do usuário `admin` na inicialização do container.
 
-A partir da versão 3, o Airflow **gera automaticamente a senha do usuário admin na inicialização do container**.
-
-Ela **não é mais fixa**.
-
-Para obter a senha:
+Ela não é fixa e deve ser obtida nos logs:
 
 ```bash
 make logs_airflow
@@ -300,14 +279,13 @@ ou
 docker compose logs airflow
 ```
 
-Procure nos logs por algo como:
+Exemplo de saída:
 
 ```
-lakehouse-airflow  | Simple auth manager | Password for user 'admin': UsAxMF67F86Wh3Dw
-
+lakehouse-airflow  | Simple auth manager | Password for user 'admin': XXXXXXXX
 ```
 
-Acesse a interface:
+Acesse:
 
 ```
 http://localhost:8081
@@ -319,23 +297,21 @@ Usuário padrão:
 admin
 ```
 
-Sem recuperar essa senha nos logs, não será possível acessar o painel.
+Sem recuperar a senha nos logs, não será possível acessar a interface.
 
 ---
 
-### Criação do Bucket no MinIO
+## Criação do Bucket no MinIO
 
-Antes de executar as DAGs de exemplo, é **obrigatório criar manualmente o bucket no MinIO**.
+Antes de executar as DAGs de exemplo, é obrigatório criar manualmente o bucket no MinIO.
 
 ### Acessar o MinIO
-
-Disponível em:
 
 ```
 http://localhost:9001
 ```
 
-Use as credenciais definidas no `.env`:
+Utilize as credenciais definidas no `.env`:
 
 ```
 MINIO_ROOT_USER
@@ -347,12 +323,21 @@ MINIO_ROOT_PASSWORD
 1. Acesse o console do MinIO
 2. Clique em **Buckets**
 3. Selecione **Create Bucket**
-4. Crie o bucket com o nome esperado pelas DAGs (por default esse template espera ao menos um Bucket com o nome  `lakehouse`, demais camadas ou sub-diretórios ele consegue gerar na escrita.)
+4. Crie o bucket esperado pelas DAGs
 
-⚠️ Caso o bucket não exista, as DAGs irão falhar ao tentar gravar dados.
+Por padrão, este template requer ao menos um bucket chamado:
+
+```
+lakehouse
+```
+
+As camadas (bronze, silver, gold) e subdiretórios são criadas automaticamente durante a escrita.
+
+⚠️ Caso o bucket não exista, as DAGs falharão ao tentar persistir dados.
+
 ---
 
-## Executando as DAGs
+# Executando as DAGs
 
 Após:
 
@@ -360,10 +345,12 @@ Após:
 * Recuperar a senha do Airflow
 * Criar o bucket no MinIO
 
-Acesse o Airflow:
+Acesse:
 
 ```
 http://localhost:8081
 ```
 
 Ative e execute as DAGs disponíveis.
+
+---
