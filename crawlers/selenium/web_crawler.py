@@ -93,7 +93,7 @@ def get_news_from_site():
 
         df = pd.DataFrame(news)
 
-        full_path = get_full_path("news.xlsx","raw")
+        full_path = get_full_path("news.csv","raw")
 
         logging.info(f"News:  {len(news)}")
         save_on_lake(df=df, save_path=full_path)
