@@ -36,6 +36,37 @@ https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-ja
 
 RUN chmod 644 /opt/spark/jars/*.jar
 
+# ========================
+# Instala o google Chrome
+# ========================
+
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    gnupg \
+    curl \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libxcomposite1 \
+    libxrandr2 \
+    libxdamage1 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libxshmfence1 \
+    libx11-xcb1 \
+    libgtk-3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" \
+    > /etc/apt/sources.list.d/google.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable
+
+
 USER airflow
 
 # ========================
