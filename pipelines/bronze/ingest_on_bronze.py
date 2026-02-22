@@ -3,8 +3,10 @@ def ingest_test():
     from core.utils import get_full_path
 
     layer = "bronze"
+    domain = "test"
     table_name = "example"
-    full_path = get_full_path(table_name, layer)
+
+    full_path = get_full_path(layer,domain, table_name)
 
     spark = get_spark_session("ingest_test",verbose=False, suppress_init_logs=True)
     

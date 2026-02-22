@@ -6,7 +6,7 @@ def transform_test():
     spark = get_spark_session("transform_test", verbose=False, suppress_init_logs=True)
 
     # read table in bronze layer
-    df = spark.read.format("delta").load(get_full_path("example", "bronze"))
+    df = spark.read.format("delta").load(get_full_path(layer="bronze", domain="test", table_name="example"))
 
     # transform example
     df = (
@@ -19,5 +19,5 @@ def transform_test():
         )
     )
 
-    save_delta(df,get_full_path("example", "silver"), overwriteSchema=True)
+    save_delta(df,get_full_path(layer="silver", domain="test",table_name="example"), overwriteSchema=True)
     

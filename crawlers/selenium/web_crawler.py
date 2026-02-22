@@ -35,6 +35,7 @@ def get_news_from_site():
     """
 
     import logging
+    from datetime import datetime
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
@@ -93,10 +94,11 @@ def get_news_from_site():
 
         df = pd.DataFrame(news)
 
-        full_path = get_full_path("news.csv","raw")
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        full_path = get_full_path("raw", "test", f"news_{today_str}.xlsx")
 
         logging.info(f"News:  {len(news)}")
-        save_on_lake(df=df, save_path=full_path)
+        save_on_lake(df=df, save_path=full_path, index=False)
 
     finally:
         driver.quit()

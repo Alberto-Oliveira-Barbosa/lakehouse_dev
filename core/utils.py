@@ -1,13 +1,14 @@
 import logging
 
 def get_full_path(
+        layer:str,
+        domain:str,
         table_name:str, 
-        layer:str, 
         bucket:str="lakehouse", 
         protocol:str="s3a://"
         ) -> str:
 
-    full_path = f"{protocol}{bucket}/{layer}/{table_name}"
+    full_path = f"{protocol}{bucket}/{layer}/{domain}/{table_name}"
 
     logging.info(f"Full path: {full_path}")
     return full_path
@@ -21,10 +22,11 @@ def _get_credentials():
         "PASSWORD" : os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
         }
 
-def save_on_lake(df, save_path):
+def save_on_lake(df, save_path, **kwargs):
     """
     Save a DataFrame to a Data Lake (S3/MinIO), automatically detecting the file type
-    from the file extension.
+    from the file extension. Any extra keyword arguments are passed to the underlying
+    pandas save function (to_excel, to_csv, to_parquet).
 
     Parameters:
     -----------
@@ -32,6 +34,8 @@ def save_on_lake(df, save_path):
         The DataFrame to be saved.
     save_path : str
         Full path in the data lake, e.g., "s3://bucket/layer/file.xlsx"
+    **kwargs : dict
+        Extra keyword arguments to pass to pandas' save functions.
 
     Notes:
     ------
@@ -42,7 +46,6 @@ def save_on_lake(df, save_path):
     import logging
     import os
 
-    # Retrieve credentials for MinIO/S3
     logging.info("Get credentials...")
     credentials = _get_credentials()
     
@@ -52,44 +55,38 @@ def save_on_lake(df, save_path):
         "client_kwargs": {"endpoint_url": credentials["ENDPOINT"]}
     }
 
-    # Replace 's3a://' with 's3://' for fsspec compatibility
     save_path = save_path.replace("s3a://", "s3://")
-
-    # Detect file type from the extension
     ext = os.path.splitext(save_path)[-1].lower()
-    if ext == ".xlsx":
-        file_type = "excel"
-    elif ext == ".csv":
-        file_type = "csv"
-    elif ext == ".parquet":
-        file_type = "parquet"
-    else:
-        raise ValueError(f"Unsupported extension '{ext}'. Use '.xlsx', '.csv', or '.parquet'.")
-
+    
     try:
-        logging.info(f"Saving on {save_path} as {file_type}")
-
-        # Save according to detected file type
-        if file_type == "excel":
-            df.to_excel(save_path, index=False, storage_options=storage_options)
-        elif file_type == "csv":
-            df.to_csv(save_path, index=False, storage_options=storage_options)
-        elif file_type == "parquet":
-            df.to_parquet(save_path, index=False, storage_options=storage_options)
-
+        logging.info(f"Saving on {save_path} as {ext}")
+        if ext == ".xlsx":
+            df.to_excel(save_path, storage_options=storage_options, **kwargs)
+        elif ext == ".csv":
+            df.to_csv(save_path, storage_options=storage_options, **kwargs)
+        elif ext == ".parquet":
+            df.to_parquet(save_path, storage_options=storage_options, **kwargs)
+        else:
+            raise ValueError(f"Unsupported extension '{ext}'. Use '.xlsx', '.csv', or '.parquet'.")
+        
         logging.info("Write completed successfully.")
     except Exception as e:
         logging.exception("Write file failed.")
         raise RuntimeError(f"Write failed for path: {save_path}") from e
 
-def read_from_lake(file_path):
+
+def read_from_lake(file_path, **kwargs):
     """
-    Read a file from a Data Lake (S3/MinIO) and return a pandas DataFrame.
+    Read a file from a Data Lake (S3/MinIO) and return a pandas DataFrame. Any extra
+    keyword arguments are passed to the underlying pandas read function (read_excel,
+    read_csv, read_parquet).
 
     Parameters:
     -----------
     file_path : str
         Full path in the data lake, e.g., "s3://bucket/layer/file.xlsx"
+    **kwargs : dict
+        Extra keyword arguments to pass to pandas' read functions.
 
     Returns:
     --------
@@ -106,7 +103,6 @@ def read_from_lake(file_path):
     import logging
     import os
 
-    # Retrieve credentials for MinIO/S3
     logging.info("Get credentials...")
     credentials = _get_credentials()
     
@@ -116,19 +112,17 @@ def read_from_lake(file_path):
         "client_kwargs": {"endpoint_url": credentials["ENDPOINT"]}
     }
 
-    # Replace 's3a://' with 's3://' for fsspec compatibility
     file_path = file_path.replace("s3a://", "s3://")
-
-    # Detect file type based on extension
     ext = os.path.splitext(file_path)[1].lower()
+    
     try:
         logging.info(f"Reading file {file_path} with extension {ext}")
         if ext == ".xlsx":
-            df = pd.read_excel(file_path, storage_options=storage_options)
+            df = pd.read_excel(file_path, storage_options=storage_options, **kwargs)
         elif ext == ".csv":
-            df = pd.read_csv(file_path, storage_options=storage_options)
+            df = pd.read_csv(file_path, storage_options=storage_options, **kwargs)
         elif ext == ".parquet":
-            df = pd.read_parquet(file_path, storage_options=storage_options)
+            df = pd.read_parquet(file_path, storage_options=storage_options, **kwargs)
         else:
             raise ValueError(f"Unsupported extension '{ext}'. Use '.xlsx', '.csv', or '.parquet'.")
         

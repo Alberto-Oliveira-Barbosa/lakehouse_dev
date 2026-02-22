@@ -4,7 +4,7 @@ def generate_gold_metrics():
     from core.utils import get_full_path
 
     spark = get_spark_session("aggregation_test",verbose=False, suppress_init_logs=True)
-    df = spark.read.format("delta").load(get_full_path("example", "silver"))
+    df = spark.read.format("delta").load(get_full_path("silver", "test", "example"))
 
     # employees by department
     dept_total = (
@@ -38,4 +38,4 @@ def generate_gold_metrics():
     final_df = dept_total.unionByName(gender_avg).unionByName(global_kpi)
     final_df = final_df.withColumn("EXECUTION_DATE", F.current_date())
 
-    save_delta(final_df, get_full_path("example", "gold"))
+    save_delta(final_df, get_full_path("gold", "test", "example"))
