@@ -34,9 +34,11 @@ def get_news_from_site():
           which could be improved by relying solely on WebDriverWait.
     """
 
+    import logging
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
+    from core.utils import save_on_lake, get_full_path
     
     import pandas as pd
     import time
@@ -58,12 +60,12 @@ def get_news_from_site():
 
     try:
         url = "https://g1.globo.com/"
-        print(f"Try connect to {url}")
+        logging.info(f"Try connect to {url}")
         driver.get(url)
 
         time.sleep(5)
 
-        # print("Existe elemento?",
+        # logging.info("Existe elemento?",
         #     len(driver.find_elements(By.CSS_SELECTOR, ".post-mais-lidas__title")))
 
         wait = WebDriverWait(driver, 60)
@@ -77,7 +79,7 @@ def get_news_from_site():
         elements = container.find_elements(By.CSS_SELECTOR, ".post-mais-lidas__title")
 
         news = []
-        print("Try get texts from element")
+        logging.info("Try get texts from element...")
         for elem in elements:
             title = elem.text
             try:
@@ -91,7 +93,10 @@ def get_news_from_site():
 
         df = pd.DataFrame(news)
 
-        print("News: ", len(news))
+        full_path = get_full_path("news.xlsx","raw")
+
+        logging.info(f"News:  {len(news)}")
+        save_on_lake(df=df, save_path=full_path)
 
     finally:
         driver.quit()

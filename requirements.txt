@@ -6,10 +6,12 @@
 # AWS / S3 / MinIO
 boto3
 pyarrow
+s3fs
 
 # Data Analysis
 pandas>=2.1.0
 numpy>=1.26.0
+openpyxl
 
 # Selenium (web scraping / browser automation)
 selenium>=4.28.1 # using certifi==2025.1.31
