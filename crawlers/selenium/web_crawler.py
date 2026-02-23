@@ -39,7 +39,7 @@ def get_news_from_site():
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
-    from core.utils import save_on_lake, get_full_path
+    from core.lake_utils import save_on_lake, get_full_path
     
     import pandas as pd
     import time
@@ -65,9 +65,6 @@ def get_news_from_site():
         driver.get(url)
 
         time.sleep(5)
-
-        # logging.info("Existe elemento?",
-        #     len(driver.find_elements(By.CSS_SELECTOR, ".post-mais-lidas__title")))
 
         wait = WebDriverWait(driver, 60)
 

@@ -1,5 +1,5 @@
 from core.spark.spark_utils import get_spark_session, save_delta
-from core.utils import get_full_path
+from core.lake_utils import get_full_path
 from pyspark.sql import functions as F
 
 def transform_test():

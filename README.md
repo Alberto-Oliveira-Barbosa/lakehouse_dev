@@ -9,14 +9,58 @@ Projeto de referência para implementação de uma arquitetura **Data Lakehouse*
 
 O ambiente é totalmente containerizado com **Docker**, garantindo reprodutibilidade, padronização e facilidade de execução local.
 
-A modelagem segue o padrão clássico de camadas do Lakehouse:
+A modelagem segue o padrão clássico de camadas do Lakehouse, bronze/silver/gold, com apenas uma diferença a estrutura do projeto com ingestão externa via crawlers, será adotado uma camada extra: 
 
-**Bronze → Silver → Gold**
+* **Raw**: Dados imutáveis e versionados, recebidos de fontes externas (planilhas, APIs, crawlers, arquivos brutos)
+* **Bronze**: dados estruturados convertidos para formatos analíticos (Parquet/Delta)
+* **Silver**: Dados limpos, padronizados, deduplicados e enriquecidos, prontos para consumo analítico intermediário.
+* **Gold**: Dados modelados com regras de negócio aplicadas, agregados e organizados para consumo analítico e BI.
 
-* **Bronze**: dados brutos (raw ingestion)
-* **Silver**: dados tratados, limpos e enriquecidos
-* **Gold**: dados modelados e prontos para consumo analítico
 
+
+```text
+Visão Arquitetural (Fluxo Lógico)
+
+                 ┌─────────────────────────────┐
+                 │      Fontes Externas        │
+                 │  - Crawlers                 │
+                 │  - APIs                     │
+                 │  - Planilhas                │
+                 └──────────────┬──────────────┘
+                                │
+                                ▼
+                        ┌────────────────┐
+                        │      RAW       │
+                        │ Dados imutáveis│
+                        │Planilhas/outros│
+                        └────────┬───────┘
+                                 │
+                                 ▼
+                        ┌────────────────┐
+                        │    BRONZE      │
+                        │ Parquet/Delta  │
+                        │ Schema aplicado│
+                        └────────┬───────┘
+                                 │
+                                 ▼
+                        ┌────────────────┐
+                        │    SILVER      │
+                        │ Limpeza        │
+                        │ Enriquecimento │
+                        └────────┬───────┘
+                                 │
+                                 ▼
+                        ┌────────────────┐
+                        │     GOLD       │
+                        │ Regras negócio │
+                        │ BI / Analytics │
+                        └────────────────┘
+
+
+Orquestração: Apache Airflow
+Processamento: Spark + Delta Lake
+Armazenamento físico de todas as camadas: MinIO
+```
 ---
 
 ## Tecnologias Utilizadas
@@ -354,3 +398,7 @@ http://localhost:8081
 Ative e execute as DAGs disponíveis.
 
 ---
+
+## Alguns links com mais informações:
+- https://cloud.google.com/discover/what-is-a-data-lakehouse?hl=pt-BR
+- https://www.databricks.com/br/blog/2020/01/30/what-is-a-data-lakehouse.html?itm_data=lakehouse-link-lakehouseblog

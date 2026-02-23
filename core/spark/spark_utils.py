@@ -1,3 +1,91 @@
+"""
+spark_utils.py
+
+Spark session factory and Delta Lake utilities for the Lakehouse architecture.
+
+This module centralizes SparkSession creation, Delta Lake configuration,
+and S3A (MinIO-compatible) integration, providing a production-ready setup
+for data processing across Raw, Bronze, Silver, and Gold layers.
+
+Architecture Context
+--------------------
+Orchestration: Airflow
+Processing Engine: Apache Spark
+Storage Layer: Delta Lake
+Object Storage: MinIO (S3-compatible)
+
+Purpose
+-------
+- Create a fully configured SparkSession with Delta Lake support
+- Ensure compatibility between Spark, Hadoop, and MinIO (S3A)
+- Prevent common runtime failures caused by:
+    * AWS SDK version conflicts (V1 vs V2)
+    * Hadoop time/size suffix parsing errors (e.g., "60s", "24h", "128M")
+- Provide safe Delta Lake write utilities
+- Offer optional Spark initialization log suppression for cleaner pipelines
+
+Key Problems Solved
+-------------------
+1. NumberFormatException:
+   Hadoop default configs use suffixes like "60s", "5m", "24h", "128M".
+   Delta Lake attempts numeric parsing, causing failures.
+
+2. ClassNotFoundException:
+   Hadoop 3.3.4 references AWS SDK V2 credential providers
+   not present in the Spark classpath.
+
+Solutions Implemented
+---------------------
+- Explicit AWS SDK V1 dependency declaration
+- Explicit S3A credential provider configuration
+- Conversion of all suffixed time/size values into numeric representations
+- Direct JVM-level Hadoop configuration overrides
+- Automatic detection and correction of residual invalid configs
+
+Features
+--------
+- Delta Lake integration via delta-spark
+- MinIO (S3A) connectivity with path-style access
+- Fully numeric S3A configuration (timeouts, retries, multipart sizes)
+- Optional suppression of noisy Spark/Ivy/JVM startup logs
+- Flexible Delta writer with partitioning and dynamic options
+
+Layer Integration
+-----------------
+Raw    → Spark ingestion from immutable data
+Bronze → Structured Delta tables
+Silver → Cleaned and enriched transformations
+Gold   → Business-modeled and aggregated datasets
+
+Dependencies
+------------
+- pyspark
+- delta-spark
+- hadoop-aws (SDK V1 compatible)
+- aws-java-sdk-bundle (V1)
+- MinIO (S3-compatible storage)
+
+Design Principles
+-----------------
+- Production-safe configuration
+- Deterministic behavior across environments
+- Container-friendly (Docker-compatible)
+- Explicit dependency control
+- Clear separation between session initialization and write operations
+
+Typical Usage
+-------------
+spark = get_spark_session("bronze_layer")
+df = spark.read.parquet("s3a://lakehouse/raw/domain/")
+save_delta(df, "s3a://lakehouse/bronze/domain/", mode="overwrite")
+
+Notes
+-----
+This module is designed for local and containerized environments
+where Spark connects to MinIO instead of AWS S3, while maintaining
+full S3 API compatibility.
+"""
+
 import sys
 import os
 import logging

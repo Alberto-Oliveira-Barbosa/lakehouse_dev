@@ -1,4 +1,65 @@
+"""
+lake_utils.py
+
+Utility module for interacting with the Data Lakehouse storage layer.
+
+This module centralizes helper functions responsible for:
+
+- Building standardized S3 paths following the Lakehouse layer pattern
+  (Raw → Bronze → Silver → Gold)
+- Managing MinIO (S3-compatible) credentials via environment variables
+- Reading and writing pandas DataFrames to the lake
+- Listing objects inside bucket directories
+
+Architecture Context
+--------------------
+Storage: MinIO (S3-compatible object storage)
+Processing: Spark + Delta Lake
+Orchestration: Airflow
+
+Layer Structure
+---------------
+raw/    : Immutable and versioned data received from external sources
+          (crawlers, APIs, spreadsheets, raw files)
+
+bronze/ : Structured data with schema applied and converted to analytical
+          formats such as Parquet or Delta
+
+silver/ : Cleaned, standardized, deduplicated, and enriched datasets
+
+gold/   : Business-modeled, aggregated datasets ready for analytics and BI
+
+Features
+--------
+- Automatic file format detection based on extension (.xlsx, .csv, .parquet)
+- Transparent handling of S3/MinIO authentication
+- Support for both s3:// and s3a:// protocols
+- Centralized logging for observability
+
+Environment Variables
+---------------------
+MINIO_ENDPOINT
+MINIO_ROOT_USER
+MINIO_ROOT_PASSWORD
+
+Dependencies
+------------
+- pandas
+- s3fs
+- boto3
+- openpyxl (for Excel support)
+
+Design Principles
+-----------------
+- Immutability at the Raw layer
+- Clear separation of concerns between storage and processing
+- Idempotent and reusable utility functions
+- Cloud-agnostic S3 interface (compatible with AWS S3 or MinIO)
+"""
+import os
 import logging
+import boto3
+import pandas as pd
 
 def get_full_path(
         layer:str,
@@ -14,7 +75,6 @@ def get_full_path(
     return full_path
 
 def _get_credentials():
-    import os
 
     return {
         "ENDPOINT" : os.getenv("MINIO_ENDPOINT", "http://minio:9000"),
@@ -43,8 +103,6 @@ def save_on_lake(df, save_path, **kwargs):
     - For Excel, requires `openpyxl`.
     - Supported formats: Excel (.xlsx), CSV (.csv), Parquet (.parquet)
     """
-    import logging
-    import os
 
     logging.info("Get credentials...")
     credentials = _get_credentials()
@@ -99,9 +157,6 @@ def read_from_lake(file_path, **kwargs):
     - For Excel files, requires `openpyxl`.
     - Supported formats: Excel (.xlsx), CSV (.csv), Parquet (.parquet)
     """
-    import pandas as pd
-    import logging
-    import os
 
     logging.info("Get credentials...")
     credentials = _get_credentials()
@@ -133,8 +188,6 @@ def read_from_lake(file_path, **kwargs):
         raise RuntimeError(f"Read failed for path: {file_path}") from e
     
 def list_files_in_directory(directory_path, bucket_name="lakehouse"):
-    import boto3
-    import logging
 
     credentials = _get_credentials()
     _files = []

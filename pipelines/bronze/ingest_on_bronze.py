@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 from datetime import datetime
 from core.spark.spark_utils import get_spark_session, save_delta
-from core.utils import get_full_path, list_files_in_directory,read_from_lake
+from core.lake_utils import get_full_path, list_files_in_directory,read_from_lake
 
 def ingest_test():
 
