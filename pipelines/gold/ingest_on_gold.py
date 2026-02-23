@@ -1,7 +1,9 @@
+from pyspark.sql import functions as F
+from core.spark.spark_utils import get_spark_session, save_delta
+from core.utils import get_full_path
+
+
 def generate_gold_metrics():
-    from pyspark.sql import functions as F
-    from core.spark.spark_utils import get_spark_session, save_delta
-    from core.utils import get_full_path
 
     spark = get_spark_session("aggregation_test",verbose=False, suppress_init_logs=True)
     df = spark.read.format("delta").load(get_full_path("silver", "test", "example"))
@@ -39,3 +41,4 @@ def generate_gold_metrics():
     final_df = final_df.withColumn("EXECUTION_DATE", F.current_date())
 
     save_delta(final_df, get_full_path("gold", "test", "example"))
+

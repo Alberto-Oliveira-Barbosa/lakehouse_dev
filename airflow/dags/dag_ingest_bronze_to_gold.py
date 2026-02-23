@@ -2,8 +2,8 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 from pipelines.bronze.ingest_on_bronze import ingest_test
-from pipelines.silver.transform import transform_test
-from pipelines.gold.aggregates import generate_gold_metrics
+from pipelines.silver.ingest_on_silver import transform_test
+from pipelines.gold.ingest_on_gold import generate_gold_metrics
 
 default_args = {
     "owner": "airflow",

@@ -2,6 +2,8 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 from crawlers.selenium.web_crawler import get_news_from_site
+from pipelines.bronze.ingest_on_bronze import ingest_from_raw
+from pipelines.silver.ingest_on_silver import transform_news
 
 default_args = {
     "owner": "airflow",
@@ -23,5 +25,15 @@ with DAG(
         python_callable=get_news_from_site
     )
 
-    get_news_from_site
+    ingest_from_raw = PythonOperator(
+        task_id = "ingest_from_raw",
+        python_callable=ingest_from_raw
+    )
+
+    transform_news = PythonOperator(
+        task_id = "transform_news",
+        python_callable=transform_news
+    )
+
+    get_news_from_site >> ingest_from_raw >> transform_news
 

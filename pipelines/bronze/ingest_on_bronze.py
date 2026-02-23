@@ -1,6 +1,10 @@
+import logging
+import pandas as pd
+from datetime import datetime
+from core.spark.spark_utils import get_spark_session, save_delta
+from core.utils import get_full_path, list_files_in_directory,read_from_lake
+
 def ingest_test():
-    from core.spark.spark_utils import get_spark_session, save_delta
-    from core.utils import get_full_path
 
     layer = "bronze"
     domain = "test"
@@ -18,3 +22,22 @@ def ingest_test():
     ])
 
     save_delta(df, full_path)
+
+def ingest_from_raw():
+    paths = list_files_in_directory('raw/test/')
+
+    df_final = None
+    for path in paths:
+        logging.info(f"Processing file: {path}")
+        path = path.split("/")
+        _df = read_from_lake(get_full_path(layer=path[0], domain=path[1], table_name=path[2]))
+        date = path[-1].split(".")[0].split("_")[1]
+        _df["extraction_date"] = datetime.strptime(date, "%Y-%m-%d")
+        df_final = pd.concat([df_final, _df])
+    
+    spark = get_spark_session("ingest_from_raw",verbose=False, suppress_init_logs=True)
+
+    df = spark.createDataFrame(df_final)
+    save_delta(df,get_full_path("bronze", "test","news"))
+    
+

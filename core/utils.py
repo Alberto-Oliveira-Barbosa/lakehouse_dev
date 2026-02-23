@@ -10,7 +10,7 @@ def get_full_path(
 
     full_path = f"{protocol}{bucket}/{layer}/{domain}/{table_name}"
 
-    logging.info(f"Full path: {full_path}")
+    logging.info(f"Create a path: {full_path}")
     return full_path
 
 def _get_credentials():
@@ -131,3 +131,31 @@ def read_from_lake(file_path, **kwargs):
     except Exception as e:
         logging.exception("Failed to read file from lake.")
         raise RuntimeError(f"Read failed for path: {file_path}") from e
+    
+def list_files_in_directory(directory_path, bucket_name="lakehouse"):
+    import boto3
+    import logging
+
+    credentials = _get_credentials()
+    _files = []
+
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=credentials["ENDPOINT"],
+        aws_access_key_id=credentials["USER"],
+        aws_secret_access_key=credentials["PASSWORD"],
+    )
+
+    response = s3.list_objects_v2(
+        Bucket=bucket_name,
+        Prefix=directory_path
+    )
+
+    if "Contents" in response:
+        for obj in response["Contents"]:
+            logging.info(obj["Key"])
+            _files.append(str(obj["Key"]))
+    else:
+        logging.info(f"No files found in {directory_path}")
+    
+    return _files
